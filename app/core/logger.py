@@ -117,42 +117,61 @@ def warning(message):
     _logger_main.warning(message)
 
 
-def log_stats(exp_id):
-    space_info, time_info = values.stats_results[exp_id]
+def log_stats(task_tag_name, tool_stats):
+
+    # TODO: log benchmark stats
 
     with open(values.file_stats_log, "a") as log_file:
-        log_file.write("\n" + exp_id + "\n")
-        log_file.write("\t\t search space size: {0}\n".format(space_info.size))
-        log_file.write("\t\t count enumerations: {0}\n".format(space_info.enumerations))
+        log_file.write("\n" + task_tag_name + "\n")
         log_file.write(
-            "\t\t count plausible patches: {0}\n".format(space_info.plausible)
-        )
-        log_file.write("\t\t count generated: {0}\n".format(space_info.generated))
-        log_file.write(
-            "\t\t count non-compiling patches: {0}\n".format(space_info.non_compilable)
+            "\t\t search space size: {0}\n".format(tool_stats.space_stats.size)
         )
         log_file.write(
-            "\t\t count implausible patches: {0}\n".format(space_info.get_implausible())
-        )
-        log_file.write("\t\t time build: {0} seconds\n".format(time_info.total_build))
-        log_file.write(
-            "\t\t time validation: {0} seconds\n".format(time_info.total_validation)
+            "\t\t count enumerations: {0}\n".format(tool_stats.space_stats.enumerations)
         )
         log_file.write(
-            "\t\t time duration: {0} seconds\n".format(time_info.get_duration())
+            "\t\t count plausible patches: {0}\n".format(
+                tool_stats.space_stats.plausible
+            )
+        )
+        log_file.write(
+            "\t\t count generated: {0}\n".format(tool_stats.space_stats.generated)
+        )
+        log_file.write(
+            "\t\t count non-compiling patches: {0}\n".format(
+                tool_stats.space_stats.non_compilable
+            )
+        )
+        log_file.write(
+            "\t\t count implausible patches: {0}\n".format(
+                tool_stats.space_stats.get_implausible()
+            )
+        )
+        log_file.write(
+            "\t\t time build: {0} seconds\n".format(tool_stats.time_stats.total_build)
+        )
+        log_file.write(
+            "\t\t time validation: {0} seconds\n".format(
+                tool_stats.time_stats.total_validation
+            )
+        )
+        log_file.write(
+            "\t\t time duration: {0} seconds\n".format(
+                tool_stats.time_stats.get_duration()
+            )
         )
         log_file.write(
             "\t\t latency compilation: {0} seconds\n".format(
-                time_info.get_latency_compilation()
+                tool_stats.time_stats.get_latency_compilation()
             )
         )
         log_file.write(
             "\t\t latency validation: {0} seconds\n".format(
-                time_info.get_latency_validation()
+                tool_stats.time_stats.get_latency_validation()
             )
         )
         log_file.write(
             "\t\t latency plausible: {0} seconds\n".format(
-                time_info.get_latency_plausible()
+                tool_stats.time_stats.get_latency_plausible()
             )
         )

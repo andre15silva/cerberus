@@ -8,6 +8,7 @@ from app.core import emitter
 from app.core import utilities
 from app.core import values
 from app.core.task import stats
+from app.core.task.stats import ToolStats
 from app.core.utilities import error_exit
 from app.drivers.tools.AbstractTool import AbstractTool
 
@@ -36,7 +37,7 @@ class AbstractRepairTool(AbstractTool):
             self._time.timestamp_validation
             self._time.timestamp_plausible
         """
-        return self._space, self._time, self._error
+        return self._stats
 
     def instrument(self, bug_info):
         """instrumentation for the experiment as needed by the tool"""
@@ -78,45 +79,61 @@ class AbstractRepairTool(AbstractTool):
         self.run_command("mkdir {}".format(self.dir_output), "dev/null", "/")
         return
 
-    def print_stats(self, space_info: stats.SpaceStats, time_info: stats.TimeStats):
-        emitter.highlight("\t\t\t search space size: {0}".format(space_info.size))
+    def print_stats(self):
         emitter.highlight(
-            "\t\t\t count enumerations: {0}".format(space_info.enumerations)
+            "\t\t\t search space size: {0}".format(self._stats.space_stats.size)
         )
         emitter.highlight(
-            "\t\t\t count plausible patches: {0}".format(space_info.plausible)
-        )
-        emitter.highlight("\t\t\t count generated: {0}".format(space_info.generated))
-        emitter.highlight(
-            "\t\t\t count non-compiling patches: {0}".format(space_info.non_compilable)
+            "\t\t\t count enumerations: {0}".format(
+                self._stats.space_stats.enumerations
+            )
         )
         emitter.highlight(
-            "\t\t\t count implausible patches: {0}".format(space_info.get_implausible())
+            "\t\t\t count plausible patches: {0}".format(
+                self._stats.space_stats.plausible
+            )
+        )
+        emitter.highlight(
+            "\t\t\t count generated: {0}".format(self._stats.space_stats.generated)
+        )
+        emitter.highlight(
+            "\t\t\t count non-compiling patches: {0}".format(
+                self._stats.space_stats.non_compilable
+            )
+        )
+        emitter.highlight(
+            "\t\t\t count implausible patches: {0}".format(
+                self._stats.space_stats.get_implausible()
+            )
         )
 
         emitter.highlight(
-            "\t\t\t time duration: {0} seconds".format(time_info.get_duration())
+            "\t\t\t time duration: {0} seconds".format(
+                self._stats.time_stats.get_duration()
+            )
         )
         emitter.highlight(
-            "\t\t\t time build: {0} seconds".format(time_info.total_build)
+            "\t\t\t time build: {0} seconds".format(self._stats.time_stats.total_build)
         )
         emitter.highlight(
-            "\t\t\t time validation: {0} seconds".format(time_info.total_validation)
+            "\t\t\t time validation: {0} seconds".format(
+                self._stats.time_stats.total_validation
+            )
         )
 
         if values.use_valkyrie:
             emitter.highlight(
                 "\t\t\t time latency compilation: {0} seconds".format(
-                    time_info.get_latency_compilation()
+                    self._stats.time_stats.get_latency_compilation()
                 )
             )
             emitter.highlight(
                 "\t\t\t time latency validation: {0} seconds".format(
-                    time_info.get_latency_validation()
+                    self._stats.time_stats.get_latency_validation()
                 )
             )
             emitter.highlight(
                 "\t\t\t time latency plausible: {0} seconds".format(
-                    time_info.get_latency_plausible()
+                    self._stats.time_stats.get_latency_plausible()
                 )
             )

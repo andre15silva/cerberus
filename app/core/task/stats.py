@@ -111,3 +111,45 @@ class SpaceStats:
 
 class ErrorStats:
     is_error = False
+
+
+class ToolStats:
+    time_stats = TimeStats()
+    space_stats = SpaceStats()
+    error_stats = ErrorStats()
+
+    def get_array(self):
+        summary_time_stats = self.time_stats.get_array()
+        summary_space_stats = self.space_stats.get_array()
+
+        return {"time": summary_time_stats, "space": summary_space_stats}
+
+
+class BenchmarkStats(ErrorStats):
+    # required
+    deployed = False
+    configured = False
+    built = False
+    tested = False
+
+    # optional
+    include_dependencies_status = False
+    dependencies_compressed = False
+
+    def __int__(self):
+        super().__init__()
+
+    def get_array(self):
+        summary = {
+            "deployed": "OK" if self.deployed else "FAILED",
+            "configured": "OK" if self.configured else "FAILED",
+            "built": "OK" if self.built else "FAILED",
+            "tested": "OK" if self.tested else "FAILED",
+        }
+
+        if self.include_dependencies_status:
+            summary["dependencies_compressed"] = (
+                "OK" if self.dependencies_compressed else "FAILED"
+            )
+
+        return summary

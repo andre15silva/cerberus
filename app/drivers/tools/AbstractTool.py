@@ -13,7 +13,7 @@ from app.core import definitions
 from app.core import emitter
 from app.core import utilities
 from app.core import values
-from app.core.task import stats
+from app.core.task.stats import ToolStats
 from app.core.utilities import error_exit
 from app.core.utilities import execute_command
 
@@ -34,9 +34,7 @@ class AbstractTool:
     container_id = None
     is_instrument_only = False
     timestamp_fmt = "%a %d %b %Y %H:%M:%S %p"
-    _time = stats.TimeStats()
-    _space = stats.SpaceStats()
-    _error = stats.ErrorStats()
+    _stats = ToolStats()
 
     def __init__(self, tool_name):
         """add initialization commands to all tools here"""
@@ -62,7 +60,7 @@ class AbstractTool:
             self._time.timestamp_validation
             self._time.timestamp_plausible
         """
-        return self._space, self._time, self._error
+        return self._stats
 
     def clean_up(self):
         if self.container_id:
@@ -76,9 +74,7 @@ class AbstractTool:
         self.container_id = container_id
         self.is_instrument_only = instrument_only
         self.update_dir_info(dir_info)
-        self._time = stats.TimeStats()
-        self._space = stats.SpaceStats()
-        self._error = stats.ErrorStats()
+        self._stats = ToolStats()
 
     def update_dir_info(self, dir_info):
         if self.container_id:
@@ -207,7 +203,7 @@ class AbstractTool:
             self.clean_up()
         return
 
-    def print_stats(self, space_info: stats.SpaceStats, time_info: stats.TimeStats):
+    def print_stats(self):
         """Print the statistics of the tool."""
         pass
 
@@ -267,8 +263,8 @@ class AbstractTool:
     def is_file(self, file_path):
         return abstractions.is_file(self.container_id, file_path)
 
-    def get_time_stats(self):
-        return self._time
+    # def get_time_stats(self):
+    #     return self._stats.get_array()
 
     def get_output_log_path(self):
         # parse this file for time info

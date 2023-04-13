@@ -5,6 +5,7 @@ from app.core import definitions
 from app.core import emitter
 from app.core import utilities
 from app.core.task import stats
+from app.core.task.stats import ToolStats
 from app.drivers.tools.AbstractTool import AbstractTool
 
 
@@ -32,7 +33,7 @@ class AbstractAnalyzeTool(AbstractTool):
             self._time.timestamp_validation
             self._time.timestamp_plausible
         """
-        return self._space, self._time, self._error
+        return self._stats
 
     def run_analysis(self, bug_info, config_info):
         emitter.normal("\t\t(analysis-tool) analysing experiment subject")
@@ -47,7 +48,9 @@ class AbstractAnalyzeTool(AbstractTool):
         )
         self.run_command("mkdir {}".format(self.dir_output), "dev/null", "/")
 
-    def print_stats(self, space_info: stats.SpaceStats, time_info: stats.TimeStats):
+    def print_stats(self):
         emitter.highlight(
-            "\t\t\t time duration: {0} seconds".format(time_info.get_duration())
+            "\t\t\t time duration: {0} seconds".format(
+                self._stats.time_stats.get_duration()
+            )
         )

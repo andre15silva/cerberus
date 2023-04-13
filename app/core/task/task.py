@@ -102,24 +102,54 @@ def archive_results(dir_results: str, dir_archive: str):
     utilities.execute_command(archive_command)
 
 
-def analyse_result(dir_info_list, experiment_info, tool_list: List[AbstractTool]):
+def construct_benchmark_summary(task_tag_name, benchmark_stats):
+    hash = hashlib.sha1()
+    hash.update(str(time.time()).encode("utf-8"))
+    json_f_name = f"experiment-summary-{task_tag_name}.json"
+    summary_f_path = f"{values.dir_summaries}/{json_f_name}"
+    results_summary = {
+        "general": benchmark_stats.get_array(),
+    }
+    writer.write_as_json(results_summary, summary_f_path)
+
+
+def construct_tool_summary(task_tag_name, tool_stats):
+    hash = hashlib.sha1()
+    hash.update(str(time.time()).encode("utf-8"))
+    json_f_name = f"experiment-summary-{task_tag_name}.json"
+    summary_f_path = f"{values.dir_summaries}/{json_f_name}"
+    results_summary = {
+        "tool": tool_stats.get_array(),
+    }
+    writer.write_as_json(results_summary, summary_f_path)
+
+
+def analyse_result(
+    dir_info_list,
+    task_tag_name,
+    experiment_info,
+    benchmark,
+    tool_list: List[AbstractTool],
+):
     emitter.normal("\t\t(framework) analysing experiment results")
     bug_id = str(experiment_info[definitions.KEY_BUG_ID])
-    failing_test_list = experiment_info.get(definitions.KEY_FAILING_TEST, [])
+    failing_test_list = experiment_info[definitions.KEY_FAILING_TEST]
     patch_dir = None
+
+    benchmark_stats = benchmark.analyse_output()
     for dir_info, tool in zip(dir_info_list, tool_list):
-        space_info, time_info, _ = tool.analyse_output(
-            dir_info, bug_id, failing_test_list
-        )
         conf_id = str(values.current_profile_id.get("NA"))
-        exp_id = conf_id + "-" + bug_id
-        values.stats_results[exp_id] = (space_info, time_info)
-        tool.print_stats(space_info, time_info)
+
+        tool_stats = tool.analyse_output(dir_info, bug_id, failing_test_list)
+        construct_tool_summary(task_tag_name, tool_stats)
+        tool.print_stats()
         tool.log_output_path = ""
-        logger.log_stats(exp_id)
+        logger.log_stats(task_tag_name, tool_stats)
+
         patch_dir = join(dir_info["local"]["artifacts"], "patches")
         if values.use_valkyrie:
-            valkyrie.analyse_output(patch_dir, time_info)
+            # TODO: adapt stats for valkyrie
+            valkyrie.analyse_output(patch_dir, tool_stats)
             break
 
 
@@ -218,19 +248,21 @@ def create_running_container(
     return container_id
 
 
-def construct_summary():
-    hash = hashlib.sha1()
-    hash.update(str(time.time()).encode("utf-8"))
-    json_f_name = f"experiment-summary-{hash.hexdigest()[:8]}.json"
-    summary_f_path = f"{values.dir_summaries}/{json_f_name}"
-    results_summary = dict()
-    for exp_id in values.stats_results:
-        space_info, time_info = values.stats_results[exp_id]
-        results_summary[exp_id] = {
-            "space": space_info.get_array(),
-            "time": time_info.get_array(),
-        }
-    writer.write_as_json(results_summary, summary_f_path)
+#
+# def construct_summary():
+#     hash = hashlib.sha1()
+#     hash.update(str(time.time()).encode("utf-8"))
+#     json_f_name = f"experiment-summary-{hash.hexdigest()[:8]}.json"
+#     summary_f_path = f"{values.dir_summaries}/{json_f_name}"
+#     results_summary = dict()
+#     for exp_id in values.stats_results:
+#         space_info, time_info, benchmark_info = values.stats_results[exp_id]
+#         results_summary[exp_id] = {
+#             "space": space_info.get_array(),
+#             "time": time_info.get_array(),
+#             "benchmark": benchmark_info.get_array(),
+#         }
+#     writer.write_as_json(results_summary, summary_f_path)
 
 
 def run(
@@ -315,7 +347,7 @@ def run(
                 )
                 if not retrieve_results(archive_name, repair_tool):
                     continue
-            analyse_result(dir_info, bug_info, [repair_tool])
+            analyse_result(dir_info, tag_name, bug_info, benchmark, [repair_tool])
             continue
         if index == 0:
             dir_output_local = dir_info["local"]["artifacts"]
@@ -367,7 +399,7 @@ def run(
             utilities.error_exit(f"Unknown task type: {task_type}")
 
         if not values.only_instrument:
-            analyse_result(dir_info_list, bug_info, tool_list)
+            analyse_result(dir_info_list, tag_name, bug_info, benchmark, tool_list)
             save_artifacts(dir_info_list, tool_list)
             tool_name = tool_list[0].name
             if len(tool_list) > 1:
@@ -376,5 +408,3 @@ def run(
             dir_result = dir_info_list[0]["local"]["results"]
             archive_results(dir_result, dir_archive)
             utilities.clean_artifacts(dir_result)
-
-    construct_summary()

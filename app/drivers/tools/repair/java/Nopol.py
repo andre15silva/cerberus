@@ -109,31 +109,31 @@ class Nopol(AbstractRepairTool):
 
         # count number of patch files
         list_output_dir = self.list_dir(self.dir_output)
-        self._space.generated = len(
+        self._stats.space_stats.generated = len(
             [name for name in list_output_dir if ".patch" in name]
         )
 
         # extract information from output log
         if not self.log_output_path or not self.is_file(self.log_output_path):
             emitter.warning("\t\t\t(warning) no output log file found")
-            return self._space, self._time, self._error
+            return self._stats
 
         emitter.highlight("\t\t\t Output Log File: " + self.log_output_path)
 
         if self.is_file(self.log_output_path):
             log_lines = self.read_file(self.log_output_path, encoding="iso-8859-1")
-            self._time.timestamp_start = log_lines[0].replace("\n", "")
-            self._time.timestamp_end = log_lines[-1].replace("\n", "")
+            self._stats.time_stats.timestamp_start = log_lines[0].replace("\n", "")
+            self._stats.space_stats.timestamp_end = log_lines[-1].replace("\n", "")
             for line in log_lines:
                 if "Applying patch" in line:
                     count_enumerations += 1
                 elif "PATCH FOUND" in line:
                     count_plausible += 1
 
-        self._space.generated = len(
+        self._stats.space_stats.generated = len(
             [x for x in self.list_dir(join(self.dir_source, "spooned")) if ".java" in x]
         )
-        self._space.enumerations = count_enumerations
-        self._space.plausible = count_plausible
+        self._stats.space_stats.enumerations = count_enumerations
+        self._stats.space_stats.plausible = count_plausible
 
-        return self._space, self._time, self._error
+        return self._stats

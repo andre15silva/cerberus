@@ -9,8 +9,8 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
-from app.core.task.stats import SpaceStats
-from app.core.task.stats import TimeStats
+from app.core.task.stats import BenchmarkStats
+from app.core.task.stats import ToolStats
 from app.core.task.status import TaskStatus
 
 tool_name = "Cerberus"
@@ -94,7 +94,7 @@ default_disk_space = 5  # 5GB
 dump_patches = False
 arg_pass = False
 iteration_no = -1
-stats_results: Dict[str, Tuple[SpaceStats, TimeStats]] = dict()
+# stats_results: Dict[str, Tuple[SpaceStats, TimeStats]] = dict()
 
 current_profile_id = ContextVar("current_profile_id", default=None)
 experiment_status = ContextVar("experiment_status", default=TaskStatus.NONE)
